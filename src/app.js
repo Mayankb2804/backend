@@ -18,5 +18,10 @@ app.use(express.urlencoded({//for url data
 app.use(express.static("public"))//for imagees store inpublic folder
 app.use(cookieParser())
 
+//routes
+import Userrouter from "./routes/user.route.js" 
+
+//routes declaration
+app.use("/api/v1/users", Userrouter)
 
 export { app };
