@@ -24,5 +24,5 @@ const playlistSchema = new Schema(
     },{timestamps: true})
 
 
-commentSchema.plugin(mongooseAggregatePaginate)
+playlistSchema.plugin(mongooseAggregatePaginate)
 export const Playlist = mongoose.model("Playlist", playlistSchema)
