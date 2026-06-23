@@ -9,13 +9,13 @@ import {
   getCurrentUser,
   updateUserAvatar,
   updateUserCoverImage,
-  getUserChannelProfile
+  getUserChannelProfile,
+  getWatchHistory
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router()
-
 router.route("/register").post(
     upload.fields([
         {
@@ -44,6 +44,8 @@ router.route("/c/:username")
 .get(verifyJWT, getUserChannelProfile)
 router.route("/current-user")
 .get(verifyJWT, getCurrentUser)
+router.route("/watch-history")
+.get(verifyJWT, getWatchHistory)
 
 router.route("/update-account-details")
 .patch(verifyJWT, updateAccountDetails)
@@ -59,5 +61,6 @@ router.route("/cover-image")
     upload.single("coverImage"),
     updateUserCoverImage
 )
+
 
 export default router

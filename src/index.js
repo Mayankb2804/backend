@@ -23,6 +23,9 @@ connectDB()
 .catch((error)=>{
     console.log("DBMONGO CONNECTION FAILED ||", error)
 })
+.catch((error)=>{
+    console.log("DBMONGO CONNECTION FAILED ||", error)
+})
 
 
 
