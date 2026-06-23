@@ -129,12 +129,12 @@ const logOutUser = asyncHandler( async(req, res) => {
     await User.findByIdAndUpdate(
         req.user._id,
         {
-            $set: {
-                refreshToken: undefined
+            $unset: {
+                refreshToken: 1
             }
         },
         {
-            new: true
+            returnDocument: "after"
         }
     )
 
@@ -210,7 +210,7 @@ const updateAccountDetails = asyncHandler( async(req, res) => {
                 email,
             }
         },
-        {new: true}
+        {returnDocument: "after"}
     ).select("-password")
 
     return res.status(200).json(
@@ -237,7 +237,7 @@ const updateUserAvatar = asyncHandler( async(req, res) => {
             }
         },
         {
-            new: true,
+            returnDocument: "after",
         }
     ).select("-password")
 
@@ -263,7 +263,7 @@ const updateUserCoverImage = asyncHandler( async(req, res) => {
             }
         },
         {
-            new: true,
+            returnDocument: "after",
         }
     ).select("-password")
     res.status(200).json(new ApiResponse(200, {user}, "coverImage Changed"))
