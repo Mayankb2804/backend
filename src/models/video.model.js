@@ -7,6 +7,14 @@ const videoSchema = new Schema(
             type: String,
             required: true
         },
+        videoPublicId: {
+            type: String,
+            required: true
+        },
+        thumbnailPublicId: {
+            type: String,
+            required: true
+        },
         thumbnail: {
             type: String,
             required: true
@@ -31,7 +39,7 @@ const videoSchema = new Schema(
         isPublish: {
             type: Boolean,
             default : true,
-            require: true
+            required: true
         },
         owner: {
             type: Schema.Types.ObjectId,

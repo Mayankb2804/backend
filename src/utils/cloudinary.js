@@ -1,6 +1,6 @@
 import {v2 as cloudinary} from "cloudinary"
 import fs from "fs"
-
+import { ApiError } from "./ApiError.js";
 
 cloudinary.config({ 
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
@@ -25,7 +25,26 @@ const uploadOnCloudinary = async (localFilePath) =>{
     }
 }   
 
-export {uploadOnCloudinary}
+const deleteFromCloudinary = async (publicId, resource_type = "image") => {
+    try {
+        const result = await cloudinary.uploader.destroy(
+            publicId,
+            {
+                resource_type
+            }
+        );
+        console.log(result);
+        return result;
+    } catch (error) {
+        console.log(error);
+        throw new ApiError(
+            500,
+            "Failed to delete resource from Cloudinary"
+        );
+    }
+};
+
+export {uploadOnCloudinary, deleteFromCloudinary}
 
 // cloudinary.v2.uploader
 // .upload("dog.mp4", {
