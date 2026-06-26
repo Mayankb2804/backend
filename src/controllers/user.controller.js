@@ -110,7 +110,7 @@ const loginUser = asyncHandler( async (req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: true
+        secure: false
     }
     return res.status(200)
     .cookie("accessToken", accessToken, options)
@@ -140,7 +140,7 @@ const logOutUser = asyncHandler( async(req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: true
+        secure: false
     }
     return res.status(200).clearCookie("accessToken", options).clearCookie("refreshToken", options).json(new ApiResponse(200, {} ,"user logged out successfully"))
 })
@@ -154,7 +154,7 @@ const refreshAccessToken = asyncHandler( async(req, res) => {
     
         const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
     
-        const user = User.findById(decodedToken?._id)
+        const user = await User.findById(decodedToken?._id)
     
         if(!user)
             throw new ApiError(401, "Invalid Refresh Token")
@@ -164,7 +164,7 @@ const refreshAccessToken = asyncHandler( async(req, res) => {
     
         const options = {
             httpOnly: true,
-            secure: true
+            secure: false
         }
         const {accessToken, newrefreshToken} = await generateAccessAndRefreshTokens(user._id)
     
