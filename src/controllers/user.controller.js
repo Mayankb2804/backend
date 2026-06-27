@@ -40,8 +40,10 @@ const registerUser = asyncHandler(async (req, res) => {
     if (!avatarLocalPath)
         throw new ApiError(400, "Avatar is required")
 
-    const avatar = await uploadOnCloudinary(avatarLocalPath)
-    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+    const [avatar, coverImage] = await Promise.all([
+        uploadOnCloudinary(avatarLocalPath),
+        uploadOnCloudinary(coverImageLocalPath)
+    ])
 
     if (!avatar)
         throw new ApiError(400, "Avatar upload failed")
@@ -60,8 +62,15 @@ const registerUser = asyncHandler(async (req, res) => {
     if (!createdUser)
         throw new ApiError(500, "Something went wrong while registering user")
 
-    console.log(`[Auth] ✅ New user registered: ${username}`)
-    return res.status(201).json(new ApiResponse(201, createdUser, "User registered successfully"))
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id)
+
+    const options = { httpOnly: true, secure: false }
+
+    console.log(`[Auth] ✅ New user registered and logged in: ${username}`)
+    return res.status(201)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(new ApiResponse(201, { user: createdUser, accessToken, refreshToken }, "User registered successfully"))
 })
 
 const loginUser = asyncHandler(async (req, res) => {
