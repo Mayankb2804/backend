@@ -8,48 +8,37 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const uploadOnCloudinary = async (localFilePath) =>{
-    try{
-        if(!localFilePath)
-            return null
-        const response = await cloudinary.uploader.upload(localFilePath,{
-            resource_type: "auto"
+const uploadOnCloudinary = async (localFilePath, resourceType = "image") => {
+    try {
+        if (!localFilePath) return null
+
+        const response = await cloudinary.uploader.upload(localFilePath, {
+            resource_type: resourceType,
+            quality: "auto:low",        // compress automatically
+            fetch_format: "auto",       // best format (webp etc)
+            timeout: 60000,             // 60s timeout
         })
-        //console.log("File is Uploadedd on CLoudinary", response.url);
+
         fs.unlinkSync(localFilePath)
-        return response;
-    }
-    catch(error){   
-        fs.unlinkSync(localFilePath) // remove the file from local storage temporary file as upload operation got failed
+        console.log(`[Cloudinary] ✅ Uploaded: ${response.public_id}`)
+        return response
+
+    } catch (error) {
+        if (fs.existsSync(localFilePath)) fs.unlinkSync(localFilePath)
+        console.error(`[Cloudinary] ❌ Upload failed: ${error.message}`)
         return null
     }
-}   
+}
 
 const deleteFromCloudinary = async (publicId, resource_type = "image") => {
     try {
-        const result = await cloudinary.uploader.destroy(
-            publicId,
-            {
-                resource_type
-            }
-        );
-        console.log(result);
-        return result;
+        const result = await cloudinary.uploader.destroy(publicId, { resource_type })
+        console.log(`[Cloudinary] ✅ Deleted: ${publicId}`)
+        return result
     } catch (error) {
-        console.log(error);
-        throw new ApiError(
-            500,
-            "Failed to delete resource from Cloudinary"
-        );
+        console.error(`[Cloudinary] ❌ Delete failed: ${error.message}`)
+        throw new ApiError(500, "Failed to delete resource from Cloudinary")
     }
-};
+}
 
-export {uploadOnCloudinary, deleteFromCloudinary}
-
-// cloudinary.v2.uploader
-// .upload("dog.mp4", {
-//   resource_type: "video", 
-//   public_id: "my_dog",
-//   overwrite: true, 
-//   notification_url: "https://mysite.example.com/notify_endpoint"})
-// .then(result=>console.log(result));
+export { uploadOnCloudinary, deleteFromCloudinary }
