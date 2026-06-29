@@ -86,7 +86,6 @@ const getAllVideos = asyncHandler(async (req, res) => {
             }
         }
     ])
-    console.log(video)
     return res.status(200).json(new ApiResponse(200, video, "Get Video"))
 })
 
@@ -103,8 +102,10 @@ const publishAVideo = asyncHandler(async (req, res) => {
     if(!thumbnailFileLocalPath)
         throw new ApiError(400, "Thumbnail File is required")
 
-    const videoPath = await uploadOnCloudinary(videoFileLocalPath);
-    const thumbPath = await uploadOnCloudinary(thumbnailFileLocalPath);
+    const [videoPath, thumbPath] = await Promise.all([
+        uploadOnCloudinary(videoFileLocalPath, "video"),
+        uploadOnCloudinary(thumbnailFileLocalPath)
+    ])
 
     if (!videoPath) 
         throw new ApiError(500, "Failed to upload video");
@@ -208,13 +209,13 @@ const deleteVideo = asyncHandler(async (req, res) => {
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
     const { videoId } = req.params
-    const video = Video.findById(videoId)
+    const video = await Video.findById(videoId)
     
     if(!video)
         throw new ApiError(404, "Video not found")
 
-    video.isPublsih = !video.isPublsih
-    await video.save()
+    video.isPublish = !video.isPublish
+    await video.save({ validateBeforeSave: false })
 
     return res.status(200).json(
         new ApiResponse(
