@@ -10,7 +10,8 @@ import {
   updateUserAvatar,
   updateUserCoverImage,
   getUserChannelProfile,
-  getWatchHistory
+  getWatchHistory,
+  deleteAccount
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -62,5 +63,6 @@ router.route("/cover-image")
     updateUserCoverImage
 )
 
-
+router.route("/delete-account")
+.delete(verifyJWT, deleteAccount)
 export default router

@@ -1,10 +1,15 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import { Video } from "../models/video.model.js";
+import { Comment } from "../models/comment.model.js";
+import { Like } from "../models/like.model.js";
+import { Playlist } from "../models/playlist.model.js";
+import { Subscription } from "../models/subscription.model.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
@@ -169,14 +174,14 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 })
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
-    const { fullname, email } = req.body
+    const { fullname, email, username } = req.body
 
-    if (!fullname || !email)
-        throw new ApiError(400, "Fullname and email are required")
+    if (!fullname || !email || !username)
+        throw new ApiError(400, "Fullname or email or username are required")
 
     const user = await User.findByIdAndUpdate(
         req.user?._id,
-        { $set: { fullname, email } },
+        { $set: { fullname, email, username } },
         { returnDocument: "after" }
     ).select("-password")
 
@@ -311,6 +316,49 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, owner[0].watchHistory, "Watch history fetched successfully"))
 })
 
+const deleteAccount = asyncHandler(async (req, res) => {
+    const userId = req.user._id
+    const username = req.user.username
+
+    // 1. Get all user's videos to delete their files from Cloudinary
+    const videos = await Video.find({ owner: userId })
+    await Promise.all(
+        videos.map(async (video) => {
+            if (video.videoPublicId) await deleteFromCloudinary(video.videoPublicId, "video")
+            if (video.thumbnailPublicId) await deleteFromCloudinary(video.thumbnailPublicId, "image")
+        })
+    )
+
+    // 2. Delete avatar and cover image from Cloudinary
+    const user = await User.findById(userId)
+    if (user.avatar) {
+        const avatarPublicId = user.avatar.split("/").pop().split(".")[0]
+        await deleteFromCloudinary(avatarPublicId, "image")
+    }
+    if (user.coverImage) {
+        const coverPublicId = user.coverImage.split("/").pop().split(".")[0]
+        await deleteFromCloudinary(coverPublicId, "image")
+    }
+
+    // 3. Delete all related data from MongoDB in parallel
+    await Promise.all([
+        Video.deleteMany({ owner: userId }),
+        Comment.deleteMany({ owner: userId }),
+        Like.deleteMany({ likedBy: userId }),
+        Playlist.deleteMany({ owner: userId }),
+        Subscription.deleteMany({ $or: [{ subscriber: userId }, { channel: userId }] }),
+        User.findByIdAndDelete(userId)
+    ])
+
+    const options = { httpOnly: true, secure: false }
+
+    console.log(`[Auth] ✅ Account and all data deleted: ${username}`)
+    return res.status(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json(new ApiResponse(200, {}, "Account deleted successfully"))
+})
+
 export {
     registerUser,
     loginUser,
@@ -322,5 +370,6 @@ export {
     updateUserAvatar,
     updateUserCoverImage,
     getUserChannelProfile,
-    getWatchHistory
+    getWatchHistory,
+    deleteAccount
 }
