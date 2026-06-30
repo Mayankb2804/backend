@@ -35,11 +35,33 @@ const getVideoComments = asyncHandler(async (req, res) => {
             $unwind: "$ownerDetails"
         },
         {
+            $lookup: {
+                from: "likes",
+                localField: "_id",
+                foreignField: "comment",
+                as: "commentLikes"
+            }
+        },
+        {
+            $addFields: {
+                likeCount: { $size: "$commentLikes" },
+                isLiked: {
+                    $cond: {
+                        if: { $in: [req.user?._id, "$commentLikes.likedBy"] },
+                        then: true,
+                        else: false
+                    }
+                }
+            }
+        },
+        {
             $project: {
                 _id: 1,
                 content: 1,
                 createdAt: 1,
                 updatedAt: 1,
+                likeCount: 1,
+                isLiked: 1,
                 owner: {
                     _id: "$ownerDetails._id",
                     username: "$ownerDetails.username",
@@ -75,7 +97,7 @@ const addComment = asyncHandler(async (req, res) => {
     if (!content?.trim()) 
         throw new ApiError(400, "Comment content is required");
     
-    const comment = Comment.create({
+    const comment = await Comment.create({
         content,
         video: videoId,
         owner: req.user._id

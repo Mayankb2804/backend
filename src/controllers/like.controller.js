@@ -118,8 +118,35 @@ const getLikedVideos = asyncHandler(async (req, res) => {
     );
 })
 
+const getVideoLikeCount = asyncHandler(async (req, res) => {
+    const { videoId } = req.params
+
+    if (!isValidObjectId(videoId))
+        throw new ApiError(400, "Valid Id is required")
+
+    const likeCount = await Like.countDocuments({ video: videoId })
+
+    let isLiked = false
+    if (req.user?._id) {
+        const existingLike = await Like.findOne({
+            video: videoId,
+            likedBy: req.user._id
+        })
+        isLiked = !!existingLike
+    }
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            { likeCount, isLiked },
+            "Like count fetched successfully"
+        )
+    );
+})
+
 export {
     toggleCommentLike,
     toggleVideoLike,
-    getLikedVideos
+    getLikedVideos,
+    getVideoLikeCount
 }

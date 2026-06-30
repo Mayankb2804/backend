@@ -9,7 +9,7 @@ import {asyncHandler} from "../utils/asyncHandler.js"
 const toggleSubscription = asyncHandler(async (req, res) => {
     
     // TODO: toggle subscription
-    // const {channelId} = req.params
+    const {channelId} = req.params
     const subscriberId = req.user?._id;
 
     if (!channelId) {
@@ -55,7 +55,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     const {channelId} = req.params
 
-    if(isValidObjectId(channelId))
+    if(!isValidObjectId(channelId))
         throw new ApiError(400, "Valid Id is required")
     
     const subscribers = await Subscription.aggregate([
@@ -97,7 +97,7 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 
 // controller to return channel list to which user has subscribed
 const getSubscribedChannels = asyncHandler(async (req, res) => {
-    const { subscriberId } = req.params
+    const { channelId: subscriberId } = req.params
 
     if(!isValidObjectId(subscriberId))
         throw new ApiError(400, "Valid Id is required")
