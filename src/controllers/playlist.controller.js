@@ -9,8 +9,8 @@ const createPlaylist = asyncHandler(async (req, res) => {
     const {name, description} = req.body
 
     //TODO: create playlist
-    if(!name || !description)
-        throw new ApiError(400, "All fields are required")
+    if(!name)
+        throw new ApiError(400, "Name is required")
 
     const playlist = await Playlist.create({
         name,
@@ -124,7 +124,7 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
     if(!playlist)
         throw new ApiError(404, "Playlist Not Found")
 
-    if(playist.videos.includes(videoId)) 
+    if(playlist.videos.includes(videoId)) 
         throw new ApiError(400, "Video is already exists in playlist")
 
     playlist.videos.push(videoId)
