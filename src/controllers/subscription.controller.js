@@ -97,10 +97,10 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 
 // controller to return channel list to which user has subscribed
 const getSubscribedChannels = asyncHandler(async (req, res) => {
-    const { channelId: subscriberId } = req.params
+    const { subscriberId } = req.params
 
     if(!isValidObjectId(subscriberId))
-        throw new ApiError(400, "Valid Id is required")
+        throw new ApiError(400, "Valid subscriber Id is required")
 
     const channels = await Subscription.aggregate([
         {
@@ -136,7 +136,7 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
             channels,
             "Subscribed channels fetched successfully"
         )
-    );
+    )
 })
 
 export {
