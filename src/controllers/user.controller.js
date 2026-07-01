@@ -316,6 +316,38 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, owner[0].watchHistory, "Watch history fetched successfully"))
 })
 
+const addToWatchHistory = asyncHandler(async (req, res) => {
+    const { videoId } = req.params
+
+    if (!mongoose.isValidObjectId(videoId))
+        throw new ApiError(400, "Valid video ID is required")
+
+    await User.findByIdAndUpdate(
+        req.user._id,
+        { $pull: { watchHistory: new mongoose.Types.ObjectId(videoId) } }
+    )
+
+    await User.findByIdAndUpdate(
+        req.user._id,
+        { $push: { watchHistory: { $each: [new mongoose.Types.ObjectId(videoId)], $position: 0 } } }
+    )
+
+    return res.status(200).json(
+        new ApiResponse(200, {}, "Added to watch history")
+    )
+})
+
+const clearWatchHistory = asyncHandler(async (req, res) => {
+    await User.findByIdAndUpdate(
+        req.user._id,
+        { $set: { watchHistory: [] } }
+    )
+
+    return res.status(200).json(
+        new ApiResponse(200, {}, "Watch history cleared")
+    )
+})
+
 const deleteAccount = asyncHandler(async (req, res) => {
     const userId = req.user._id
     const username = req.user.username
@@ -371,5 +403,7 @@ export {
     updateUserCoverImage,
     getUserChannelProfile,
     getWatchHistory,
+    addToWatchHistory,
+    clearWatchHistory,
     deleteAccount
 }
