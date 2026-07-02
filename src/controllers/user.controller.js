@@ -69,7 +69,11 @@ const registerUser = asyncHandler(async (req, res) => {
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id)
 
-    const options = { httpOnly: true, secure: false }
+    const options = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    }
 
     console.log(`[Auth] ✅ New user registered and logged in: ${username}`)
     return res.status(201)
@@ -102,7 +106,11 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
 
-    const options = { httpOnly: true, secure: false }
+    const options = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    }
 
     console.log(`[Auth] ✅ User logged in: ${loggedInUser.username}`)
     return res.status(200)
@@ -118,7 +126,11 @@ const logOutUser = asyncHandler(async (req, res) => {
         { returnDocument: "after" }
     )
 
-    const options = { httpOnly: true, secure: false }
+    const options = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    }
 
     console.log(`[Auth] ✅ User logged out: ${req.user.username}`)
     return res.status(200)
@@ -142,7 +154,11 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     if (incomingRefreshToken !== user?.refreshToken)
         throw new ApiError(401, "Refresh token is expired or already used")
 
-    const options = { httpOnly: true, secure: false }
+    const options = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    }
 
     const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshTokens(user._id)
 
