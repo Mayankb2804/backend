@@ -4,7 +4,7 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
+import mongoose, { isValidObjectId } from "mongoose";
 import { Video } from "../models/video.model.js";
 import { Comment } from "../models/comment.model.js";
 import { Like } from "../models/like.model.js";
@@ -348,6 +348,25 @@ const clearWatchHistory = asyncHandler(async (req, res) => {
     )
 })
 
+const clearVideoFromWatchHistory = asyncHandler(async (req, res) => {
+    const { videoId } = req.params
+
+    if(! mongoose.isValidObjectId(videoId))
+        throw new ApiError(400, "ValidId is required")
+
+    const newWatchHistory = await User.findByIdAndUpdate(req.user._id, 
+        {
+            $pull: {watchHistory : videoId}
+        },
+        {
+            returnDocument: "after"
+        }
+    )
+    return res.status(200).json(
+        new ApiResponse(200, newWatchHistory, "Removed video From watch history")
+    )
+})
+
 const deleteAccount = asyncHandler(async (req, res) => {
     const userId = req.user._id
     const username = req.user.username
@@ -405,5 +424,6 @@ export {
     getWatchHistory,
     addToWatchHistory,
     clearWatchHistory,
+    clearVideoFromWatchHistory,
     deleteAccount
 }

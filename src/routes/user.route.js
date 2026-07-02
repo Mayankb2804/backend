@@ -13,7 +13,8 @@ import {
   getWatchHistory,
   addToWatchHistory,
   clearWatchHistory,
-  deleteAccount
+  deleteAccount,
+  clearVideoFromWatchHistory
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -35,13 +36,13 @@ router.route("/register").post(
 router.route("/login").post(loginUser)
 
 
-//secured fields
 router.route("/logout")
 .post(verifyJWT, logOutUser)
 router.route("/refresh-token").post(refreshAccessToken)
 router.route("/change-password")
 .post(verifyJWT, changeCurrentPassword)
-
+router.route("/watch-history/:videoId")
+.post(verifyJWT, addToWatchHistory)
 
 router.route("/c/:username")
 .get(verifyJWT, getUserChannelProfile)
@@ -49,10 +50,8 @@ router.route("/current-user")
 .get(verifyJWT, getCurrentUser)
 router.route("/watch-history")
 .get(verifyJWT, getWatchHistory)
-router.route("/watch-history/clear")
-.delete(verifyJWT, clearWatchHistory)
-router.route("/watch-history/:videoId")
-.post(verifyJWT, addToWatchHistory)
+
+
 
 router.route("/update-account-details")
 .patch(verifyJWT, updateAccountDetails)
@@ -68,7 +67,14 @@ router.route("/cover-image")
     upload.single("coverImage"),
     updateUserCoverImage
 )
+router.route("/watch-history/v/:videoId")
+.patch(
+    verifyJWT,
+    clearVideoFromWatchHistory
+)
 
+router.route("/watch-history/clear")
+.delete(verifyJWT, clearWatchHistory)
 router.route("/delete-account")
 .delete(verifyJWT, deleteAccount)
 export default router
